@@ -40,7 +40,7 @@ func main() {
 			},
 			&cli.StringFlag{
 				Name:  "wait-for",
-				Usage: "the element to let chrome wait for before processing",
+				Usage: "duration to wait before processing, example: 5s, 10s, 1m ... etc",
 			},
 			&cli.Int64Flag{
 				Name:  "max-exec-time",

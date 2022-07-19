@@ -10,12 +10,12 @@ import (
 func exporter() cli.ActionFunc {
 	return func(ctx *cli.Context) error {
 		input := katch.Input{
-			URL:                   ctx.String("url"),
-			WaitForElementVisible: ctx.String("wait-for"),
-			MaxExecTime:           ctx.Int("max-exec-time"),
-			ViewportWidth:         ctx.Int64("viewport-width"),
-			ViewportHeight:        ctx.Int64("viewport-height"),
-			OutputFormat:          katch.OutputFormat(ctx.String("format")),
+			URL:            ctx.String("url"),
+			WaitFor:        ctx.String("wait-for"),
+			MaxExecTime:    ctx.Int("max-exec-time"),
+			ViewportWidth:  ctx.Int64("viewport-width"),
+			ViewportHeight: ctx.Int64("viewport-height"),
+			OutputFormat:   katch.OutputFormat(ctx.String("format")),
 		}
 
 		output, err := katch.Katch(ctx.Context, input)

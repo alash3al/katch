@@ -3,6 +3,7 @@ package katch
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/chromedp/cdproto/dom"
@@ -12,12 +13,12 @@ import (
 
 // Input represents a Katch input
 type Input struct {
-	URL                   string       `json:"url" query:"url" form:"url"`
-	WaitForElementVisible string       `json:"wait_element_visible" query:"wait_element_visible" form:"wait_element_visible"`
-	MaxExecTime           int          `json:"max_exec_time" query:"max_exec_time" form:"max_exec_time"`
-	ViewportWidth         int64        `json:"viewport_width" query:"viewport_width" form:"viewport_width"`
-	ViewportHeight        int64        `json:"viewport_height" query:"viewport_height" form:"viewport_height"`
-	OutputFormat          OutputFormat `json:"format" query:"format" form:"format"`
+	URL            string       `json:"url" query:"url" form:"url"`
+	WaitFor        string       `json:"wait_for" query:"wait_for" form:"wait_for"`
+	MaxExecTime    int          `json:"max_exec_time" query:"max_exec_time" form:"max_exec_time"`
+	ViewportWidth  int64        `json:"viewport_width" query:"viewport_width" form:"viewport_width"`
+	ViewportHeight int64        `json:"viewport_height" query:"viewport_height" form:"viewport_height"`
+	OutputFormat   OutputFormat `json:"format" query:"format" form:"format"`
 }
 
 // OutputFormat represents a requested format
@@ -51,8 +52,13 @@ func Katch(ctx context.Context, input Input) ([]byte, error) {
 
 	tasks = append(tasks, chromedp.Navigate(input.URL))
 
-	if input.WaitForElementVisible != "" {
-		tasks = append(tasks, chromedp.WaitVisible(input.WaitForElementVisible, chromedp.ByQuery))
+	if strings.TrimSpace(input.WaitFor) != "" {
+		waitForDur, err := time.ParseDuration(input.WaitFor)
+		if err != nil {
+			return nil, err
+		}
+
+		tasks = append(tasks, chromedp.Sleep(waitForDur))
 	}
 
 	switch input.OutputFormat {
