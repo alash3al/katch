@@ -13,12 +13,16 @@ import (
 
 // Input represents a Katch input
 type Input struct {
-	URL            string       `json:"url" query:"url" form:"url"`
-	WaitFor        string       `json:"wait_for" query:"wait_for" form:"wait_for"`
-	MaxExecTime    int          `json:"max_exec_time" query:"max_exec_time" form:"max_exec_time"`
-	ViewportWidth  int64        `json:"viewport_width" query:"viewport_width" form:"viewport_width"`
-	ViewportHeight int64        `json:"viewport_height" query:"viewport_height" form:"viewport_height"`
-	OutputFormat   OutputFormat `json:"format" query:"format" form:"format"`
+	URL                string       `json:"url" query:"url" form:"url"`
+	WaitFor            string       `json:"wait_for" query:"wait_for" form:"wait_for"`
+	MaxExecTime        int          `json:"max_exec_time" query:"max_exec_time" form:"max_exec_time"`
+	ViewportWidth      int64        `json:"viewport_width" query:"viewport_width" form:"viewport_width"`
+	ViewportHeight     int64        `json:"viewport_height" query:"viewport_height" form:"viewport_height"`
+	OutputFormat       OutputFormat `json:"format" query:"format" form:"format"`
+	PDFLandscape       bool         `json:"pdf_landscape" query:"pdf_landscape" form:"pdf_landscape"`
+	PDFPrintBackground bool         `json:"pdf_print_background" query:"pdf_print_background" form:"pdf_print_background"`
+	PDFPaperHeight     float64      `json:"pdf_paper_height" query:"pdf_paper_height" form:"pdf_paper_height"`
+	PDFPaperWidth      float64      `json:"pdf_paper_width" query:"pdf_paper_width" form:"pdf_paper_width"`
 }
 
 // OutputFormat represents a requested format
@@ -64,7 +68,14 @@ func Katch(ctx context.Context, input Input) ([]byte, error) {
 	switch input.OutputFormat {
 	case OutputFormatPDF:
 		tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
-			buf, _, err := page.PrintToPDF().Do(ctx)
+			pdfParams := page.PrintToPDF()
+			pdfParams.Landscape = input.PDFLandscape
+			pdfParams.PrintBackground = input.PDFPrintBackground
+			pdfParams.PaperHeight = input.PDFPaperHeight
+			pdfParams.PaperWidth = input.PDFPaperWidth
+			// pdfParams.PreferCSSPageSize = true
+
+			buf, _, err := pdfParams.Do(ctx)
 			if err != nil {
 				return err
 			}

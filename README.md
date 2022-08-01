@@ -17,7 +17,7 @@ $ katch serve --listen=:3000
 > http://localhost:3000/export?format=png&viewport_width=1300&viewport_height=1600&url=https://google.com  
 
 - a pdf?
-> http://localhost:3000/export?format=pdf&viewport_width=1300&viewport_height=1600&url=https://google.com  
+> http://localhost:3000/export?format=pdf&pdf_print_background=true&pdf_landscape=false&pdf_paper_height=25&pdf_paper_width=20&viewport_width=1300&viewport_height=1600&url=https://google.com
 
 - limit execution time to 5 seconds?
 > http://localhost:3000/export?format=pdf&max_exec_time=5&viewport_width=1300&viewport_height=1600&url=https://google.com  
