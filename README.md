@@ -31,7 +31,7 @@ $ katch serve --listen=:3000
 - scroll vertically by 100 pixels (scroll 1 time by 100 pixels vertically), you can do an infinity scroll by setting scroll_times=-1 !.
 > `http://localhost:3000/export?format=png&url=https://youtube.com&scroll_step=100&scroll_times=1`
 
-> **NOTE**: you can post JSON payload to the same endpoint with the same name as the above query params.
+> **NOTE**: you can post JSON payload to the same endpoint with the same query params names above.
 
 > **NOTE**: for `cli` usage, please run `$ katch help`
 
