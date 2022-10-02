@@ -1,6 +1,6 @@
 katch!
 ======
-> a very simple wrapper utility for headless chrome to easily export any webpage as `png`, `pdf` or `html` (prerender), you can use it via `http` or `cli`.
+> a very simple wrapper utility for headless chrome to easily export any webpage as `png`, `pdf` or `html` (prerender), you can use it via `http` or `cli`.  `katch` was created after revamping [scraply](https://github.com/alash3al/scraply) to help in scraping client-side apps.
 
 Usage
 ========
