@@ -68,6 +68,44 @@ func main() {
 				Aliases:  []string{"o"},
 				Required: true,
 			},
+			&cli.BoolFlag{
+				Name:  "png-full-page",
+				Usage: "whether to take a full page screenshot regardless viewport dimensions (in case of png output only)",
+				Value: true,
+			},
+			&cli.BoolFlag{
+				Name:  "pdf-landscape",
+				Usage: "whether to print the page in landscape mode or not",
+				Value: true,
+			},
+			&cli.BoolFlag{
+				Name:  "pdf-background",
+				Usage: "whether to include the page background(s) in the result or not",
+				Value: true,
+			},
+			&cli.Float64Flag{
+				Name:  "pdf-paper-height",
+				Usage: "the pdf paper height, 0 means chrome's default",
+				Value: 0,
+			},
+			&cli.Float64Flag{
+				Name:  "pdf-paper-width",
+				Usage: "the pdf paper width, 0 means chrome's default",
+				Value: 0,
+			},
+			&cli.Int64Flag{
+				Name:  "scroll-step",
+				Usage: "the scroll step (try to read more at: https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollTop)",
+			},
+			&cli.Int64Flag{
+				Name:  "scroll-times",
+				Usage: "how many times do you want to scroll? 0 means don't scroll, -1 means do infinity scroll",
+				Value: 0,
+			},
+			&cli.Int64Flag{
+				Name:  "scroll-delay",
+				Usage: "the delay duration between each scroll step, accepts duration formats (1s, 100ms, 1h, ... etc)",
+			},
 		},
 	})
 

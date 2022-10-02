@@ -2,7 +2,9 @@ package katch
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/chromedp/cdproto/runtime"
 	"strings"
 	"time"
 
@@ -19,10 +21,14 @@ type Input struct {
 	ViewportWidth      int64        `json:"viewport_width" query:"viewport_width" form:"viewport_width"`
 	ViewportHeight     int64        `json:"viewport_height" query:"viewport_height" form:"viewport_height"`
 	OutputFormat       OutputFormat `json:"format" query:"format" form:"format"`
+	PNGFullPage        bool         `json:"png_full_page" query:"png_full_page" form:"png_full_page"`
 	PDFLandscape       bool         `json:"pdf_landscape" query:"pdf_landscape" form:"pdf_landscape"`
 	PDFPrintBackground bool         `json:"pdf_print_background" query:"pdf_print_background" form:"pdf_print_background"`
 	PDFPaperHeight     float64      `json:"pdf_paper_height" query:"pdf_paper_height" form:"pdf_paper_height"`
 	PDFPaperWidth      float64      `json:"pdf_paper_width" query:"pdf_paper_width" form:"pdf_paper_width"`
+	ScrollStep         int64        `json:"scroll_step" query:"scroll_step" form:"scroll_step"`
+	ScrollDelay        string       `json:"scroll_delay" query:"scroll_delay" form:"scroll_delay"`
+	ScrollTimes        int64        `json:"scroll_times" query:"scroll_times" form:"scroll_times"`
 }
 
 // OutputFormat represents a requested format
@@ -32,7 +38,6 @@ type OutputFormat string
 const (
 	OutputFormatPDF  OutputFormat = "pdf"
 	OutputFormatPNG  OutputFormat = "png"
-	OutputFormatJPEG OutputFormat = "jpeg"
 	OutputFormatHTML OutputFormat = "html"
 )
 
@@ -65,6 +70,16 @@ func Katch(ctx context.Context, input Input) ([]byte, error) {
 		tasks = append(tasks, chromedp.Sleep(waitForDur))
 	}
 
+	if input.ScrollStep > 0 && input.ScrollTimes != 0 {
+		scrollDelayDur, err := time.ParseDuration(input.ScrollDelay)
+		if err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
+			return infinityScroll(ctx, input.ScrollTimes, input.ScrollStep, scrollDelayDur)
+		}))
+	}
+
 	switch input.OutputFormat {
 	case OutputFormatPDF:
 		tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
@@ -73,7 +88,6 @@ func Katch(ctx context.Context, input Input) ([]byte, error) {
 			pdfParams.PrintBackground = input.PDFPrintBackground
 			pdfParams.PaperHeight = input.PDFPaperHeight
 			pdfParams.PaperWidth = input.PDFPaperWidth
-			// pdfParams.PreferCSSPageSize = true
 
 			buf, _, err := pdfParams.Do(ctx)
 			if err != nil {
@@ -101,9 +115,11 @@ func Katch(ctx context.Context, input Input) ([]byte, error) {
 			return nil
 		}))
 	case OutputFormatPNG:
-		tasks = append(tasks, chromedp.FullScreenshot(&output, 100))
-	case OutputFormatJPEG:
-		tasks = append(tasks, chromedp.FullScreenshot(&output, 90))
+		if input.PNGFullPage {
+			tasks = append(tasks, chromedp.FullScreenshot(&output, 100))
+		} else {
+			tasks = append(tasks, chromedp.CaptureScreenshot(&output))
+		}
 	default:
 		return nil, fmt.Errorf("unsupported output format (%s)", input.OutputFormat)
 	}
@@ -113,4 +129,73 @@ func Katch(ctx context.Context, input Input) ([]byte, error) {
 	}
 
 	return output, nil
+}
+
+func extractDocumentElementScrollTop(ctx context.Context) (float64, error) {
+	result, exception, err := runtime.Evaluate("document.documentElement.scrollTop").Do(ctx)
+	if err != nil {
+		return 0, err
+	}
+	if exception != nil {
+		return 0, exception
+	}
+
+	var val float64
+
+	err = json.Unmarshal(result.Value, &val)
+
+	return val, err
+}
+
+func sleep(ctx context.Context, d time.Duration) error {
+	timer := time.NewTimer(d)
+	select {
+	case <-ctx.Done():
+		if !timer.Stop() {
+			<-timer.C
+		}
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
+}
+
+func documentElementScrollTop(ctx context.Context, step int64) error {
+	_, exception, err := runtime.Evaluate(fmt.Sprintf("document.documentElement.scrollTop += %d", step)).Do(ctx)
+	if err != nil {
+		return err
+	}
+	if exception != nil {
+		return exception
+	}
+	return nil
+}
+
+func infinityScroll(ctx context.Context, scrollMaxTimes int64, scrollStep int64, scrollDelayDuration time.Duration) error {
+	reachedBottom := false
+	prevDocumentElementScrollTop := float64(0)
+	scrollTimes := int64(0)
+	for !reachedBottom && !(scrollMaxTimes > -1 && scrollTimes >= scrollMaxTimes) {
+		if err := documentElementScrollTop(ctx, scrollStep); err != nil {
+			return err
+		}
+
+		if err := sleep(ctx, scrollDelayDuration); err != nil {
+			return err
+		}
+
+		newDocumentElementScrollTop, err := extractDocumentElementScrollTop(ctx)
+		if err != nil {
+			return err
+		}
+
+		if newDocumentElementScrollTop == prevDocumentElementScrollTop {
+			reachedBottom = true
+		}
+
+		prevDocumentElementScrollTop = newDocumentElementScrollTop
+		scrollTimes++
+	}
+
+	return nil
 }

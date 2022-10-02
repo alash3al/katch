@@ -33,8 +33,6 @@ func server() cli.ActionFunc {
 			switch input.OutputFormat {
 			case katch.OutputFormatPNG:
 				c.Set("Content-Type", "image/png")
-			case katch.OutputFormatJPEG:
-				c.Set("Content-Type", "image/jpeg")
 			case katch.OutputFormatPDF:
 				c.Set("Content-Type", "application/pdf")
 			case katch.OutputFormatHTML:
@@ -63,8 +61,6 @@ func server() cli.ActionFunc {
 			switch input.OutputFormat {
 			case katch.OutputFormatPNG:
 				c.Set("Content-Type", "image/png")
-			case katch.OutputFormatJPEG:
-				c.Set("Content-Type", "image/jpeg")
 			case katch.OutputFormatPDF:
 				c.Set("Content-Type", "application/pdf")
 			case katch.OutputFormatHTML:
