@@ -1,6 +1,6 @@
 katch!
 ======
-> a very simple wrapper utility for headless chrome to easily export any webpage as `png`, `jpeg`, `pdf` or `html` (prerender), you can use it via `http` or `cli`.
+> a very simple wrapper utility for headless chrome to easily export any webpage as `png`, `pdf` or `html` (prerender), you can use it via `http` or `cli`.
 
 Usage
 ========
