@@ -102,7 +102,7 @@ func main() {
 				Usage: "how many times do you want to scroll? 0 means don't scroll, -1 means do infinity scroll",
 				Value: 0,
 			},
-			&cli.Int64Flag{
+			&cli.StringFlag{
 				Name:  "scroll-delay",
 				Usage: "the delay duration between each scroll step, accepts duration formats (1s, 100ms, 1h, ... etc)",
 			},
