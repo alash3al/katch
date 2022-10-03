@@ -1,6 +1,6 @@
 katch!
 ======
-> a very simple wrapper utility for headless chrome to easily export any webpage as `png`, `jpeg`, `pdf` or `html` (prerender), you can use it via `http` or `cli`.
+> a very simple wrapper utility for headless chrome to easily export any webpage as `png`, `pdf` or `html` (prerender), you can use it via `http` or `cli`.  `katch` was created after revamping [scraply](https://github.com/alash3al/scraply) to help in scraping client-side apps.
 
 Usage
 ========
@@ -31,7 +31,7 @@ $ katch serve --listen=:3000
 - scroll vertically by 100 pixels (scroll 1 time by 100 pixels vertically), you can do an infinity scroll by setting scroll_times=-1 !.
 > `http://localhost:3000/export?format=png&url=https://youtube.com&scroll_step=100&scroll_times=1`
 
-> **NOTE**: you can post JSON payload to the same endpoint with the same name as the above query params.
+> **NOTE**: you can post JSON payload to the same endpoint with the same query params names above.
 
 > **NOTE**: for `cli` usage, please run `$ katch help`
 
