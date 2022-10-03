@@ -2,14 +2,10 @@ package katch
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"github.com/chromedp/cdproto/runtime"
 	"strings"
 	"time"
 
-	"github.com/chromedp/cdproto/dom"
-	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 )
 
@@ -75,45 +71,14 @@ func Katch(ctx context.Context, input Input) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
-			return infinityScroll(ctx, input.ScrollTimes, input.ScrollStep, scrollDelayDur)
-		}))
+		tasks = append(tasks, infinityScrollTask(input.ScrollTimes, input.ScrollStep, scrollDelayDur))
 	}
 
 	switch input.OutputFormat {
 	case OutputFormatPDF:
-		tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
-			pdfParams := page.PrintToPDF()
-			pdfParams.Landscape = input.PDFLandscape
-			pdfParams.PrintBackground = input.PDFPrintBackground
-			pdfParams.PaperHeight = input.PDFPaperHeight
-			pdfParams.PaperWidth = input.PDFPaperWidth
-
-			buf, _, err := pdfParams.Do(ctx)
-			if err != nil {
-				return err
-			}
-
-			output = buf
-
-			return nil
-		}))
+		tasks = append(tasks, pdfExporterTask(input.PDFLandscape, input.PDFPrintBackground, input.PDFPaperHeight, input.PDFPaperHeight, &output))
 	case OutputFormatHTML:
-		tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
-			node, err := dom.GetDocument().Do(ctx)
-			if err != nil {
-				return err
-			}
-
-			outputStr, err := dom.GetOuterHTML().WithNodeID(node.NodeID).Do(ctx)
-			if err != nil {
-				return err
-			}
-
-			output = []byte(outputStr)
-
-			return nil
-		}))
+		tasks = append(tasks, htmlExporterTask(&output))
 	case OutputFormatPNG:
 		if input.PNGFullPage {
 			tasks = append(tasks, chromedp.FullScreenshot(&output, 100))
@@ -129,73 +94,4 @@ func Katch(ctx context.Context, input Input) ([]byte, error) {
 	}
 
 	return output, nil
-}
-
-func extractDocumentElementScrollTop(ctx context.Context) (float64, error) {
-	result, exception, err := runtime.Evaluate("document.documentElement.scrollTop").Do(ctx)
-	if err != nil {
-		return 0, err
-	}
-	if exception != nil {
-		return 0, exception
-	}
-
-	var val float64
-
-	err = json.Unmarshal(result.Value, &val)
-
-	return val, err
-}
-
-func sleep(ctx context.Context, d time.Duration) error {
-	timer := time.NewTimer(d)
-	select {
-	case <-ctx.Done():
-		if !timer.Stop() {
-			<-timer.C
-		}
-		return ctx.Err()
-	case <-timer.C:
-		return nil
-	}
-}
-
-func documentElementScrollTop(ctx context.Context, step int64) error {
-	_, exception, err := runtime.Evaluate(fmt.Sprintf("document.documentElement.scrollTop += %d", step)).Do(ctx)
-	if err != nil {
-		return err
-	}
-	if exception != nil {
-		return exception
-	}
-	return nil
-}
-
-func infinityScroll(ctx context.Context, scrollMaxTimes int64, scrollStep int64, scrollDelayDuration time.Duration) error {
-	reachedBottom := false
-	prevDocumentElementScrollTop := float64(0)
-	scrollTimes := int64(0)
-	for !reachedBottom && !(scrollMaxTimes > -1 && scrollTimes >= scrollMaxTimes) {
-		if err := documentElementScrollTop(ctx, scrollStep); err != nil {
-			return err
-		}
-
-		if err := sleep(ctx, scrollDelayDuration); err != nil {
-			return err
-		}
-
-		newDocumentElementScrollTop, err := extractDocumentElementScrollTop(ctx)
-		if err != nil {
-			return err
-		}
-
-		if newDocumentElementScrollTop == prevDocumentElementScrollTop {
-			reachedBottom = true
-		}
-
-		prevDocumentElementScrollTop = newDocumentElementScrollTop
-		scrollTimes++
-	}
-
-	return nil
 }
