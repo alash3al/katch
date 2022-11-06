@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
-	"time"
 )
 
 func extractDocumentElementScrollTop(ctx context.Context) (float64, error) {
@@ -84,12 +85,26 @@ func infinityScrollTask(scrollMaxTimes int64, scrollStep int64, scrollDelayDurat
 }
 
 func pdfExporterTask(landscape bool, printBackground bool, paperHeight float64, paperWidth float64, output *[]byte) chromedp.ActionFunc {
+	if paperHeight < 1 {
+		paperHeight = 11
+	}
+
+	if paperWidth < 1 {
+		paperWidth = 8.5
+	}
+
 	return func(ctx context.Context) error {
 		pdfParams := page.PrintToPDF()
 		pdfParams.Landscape = landscape
 		pdfParams.PrintBackground = printBackground
 		pdfParams.PaperHeight = paperHeight
 		pdfParams.PaperWidth = paperWidth
+		pdfParams.PreferCSSPageSize = true
+		pdfParams.Scale = 1
+		pdfParams.MarginBottom = 0
+		pdfParams.MarginLeft = 0
+		pdfParams.MarginRight = 0
+		pdfParams.MarginTop = 0
 
 		buf, _, err := pdfParams.Do(ctx)
 		if err != nil {
