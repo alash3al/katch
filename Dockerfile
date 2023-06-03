@@ -14,10 +14,10 @@ RUN CGO_ENABLED=0 go build -ldflags "-s -w" -o /usr/bin/katch ./cmd/
 
 RUN upx -9 /usr/bin/katch
 
-FROM alpine
-
-RUN apk update && apk add chromium
+FROM chromedp/headless-shell
 
 WORKDIR /katch/
 
 COPY --from=builder /usr/bin/katch /usr/bin/katch
+
+ENTRYPOINT []
